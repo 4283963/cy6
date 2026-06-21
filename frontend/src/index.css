@@ -12,9 +12,23 @@ body {
 }
 
 .app-container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 24px;
+  transition: all 0.5s ease;
+}
+
+.app-container.feeding-reminder {
+  animation: colorPulse 3s ease-in-out infinite;
+}
+
+@keyframes colorPulse {
+  0%, 100% {
+    background: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.15) 0%, transparent 70%);
+  }
+  50% {
+    background: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
+  }
 }
 
 .app-header {
@@ -182,7 +196,7 @@ body {
 
 .bottom-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
 }
 

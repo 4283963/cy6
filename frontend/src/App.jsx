@@ -3,6 +3,7 @@ import StatusCard from './components/StatusCard'
 import SensorChart from './components/SensorChart'
 import CommandPanel from './components/CommandPanel'
 import StatsPanel from './components/StatsPanel'
+import FeedingPanel from './components/FeedingPanel'
 import { fetchDashboard, fetchSensorHistory, fetchPendingCommands } from './services/api'
 
 const DEFAULT_TANK_ID = 'main_tank_01'
@@ -14,6 +15,7 @@ function App() {
   const [pendingCommands, setPendingCommands] = useState([])
   const [lastUpdate, setLastUpdate] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [feedingRefreshKey, setFeedingRefreshKey] = useState(0)
 
   const loadData = async () => {
     try {
@@ -37,7 +39,11 @@ function App() {
     loadData()
     const interval = setInterval(loadData, 10000)
     return () => clearInterval(interval)
-  }, [tankId])
+  }, [tankId, feedingRefreshKey])
+
+  const handleFeedingUpdated = () => {
+    setFeedingRefreshKey((k) => k + 1)
+  }
 
   const tankStatus = dashboardData?.tank_status || {
     tank_id: tankId,
@@ -53,10 +59,46 @@ function App() {
     cooler_running: false,
   }
 
+  const feedingStatus = dashboardData?.feeding_status || {
+    has_schedule: false,
+    feeding_time: null,
+    is_enabled: false,
+    detection_window_minutes: 15,
+    today_is_fed: false,
+    fed_time: null,
+    detection_method: null,
+    is_feeding_window_open: false,
+    should_remind: false,
+    minutes_until_feeding: null,
+    minutes_since_feeding: null,
+  }
+
+  const shouldRemind = feedingStatus.should_remind
+
   return (
-    <div className="app-container">
+    <div
+      className={`app-container ${shouldRemind ? 'feeding-reminder' : ''}`}
+    >
       <header className="app-header">
-        <h1 className="app-title">🐠 智能鱼缸监控系统</h1>
+        <h1 className="app-title">
+          🐠 智能鱼缸监控系统
+          {shouldRemind && (
+            <span
+              style={{
+                marginLeft: '12px',
+                fontSize: '14px',
+                background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                animation: 'pulse 2s infinite',
+                verticalAlign: 'middle',
+              }}
+            >
+              ⚠️ 该喂小鱼了
+            </span>
+          )}
+        </h1>
         <div className="tank-selector">
           <label>鱼缸选择:</label>
           <select value={tankId} onChange={(e) => setTankId(e.target.value)}>
@@ -123,7 +165,12 @@ function App() {
         <CommandPanel
           commands={pendingCommands}
           tankId={tankId}
-          onCommandExecuted={loadData}
+          onCommandExecuted={handleFeedingUpdated}
+        />
+        <FeedingPanel
+          feedingStatus={feedingStatus}
+          tankId={tankId}
+          onFeedingUpdated={handleFeedingUpdated}
         />
         <StatsPanel dashboardData={dashboardData} lastUpdate={lastUpdate} />
       </div>

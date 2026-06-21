@@ -54,3 +54,36 @@ export async function createManualCommand(tankId, deviceType, action, duration =
     method: 'POST',
   })
 }
+
+export async function fetchFeedingStatus(tankId) {
+  return request(`/feeding/status/${tankId}`)
+}
+
+export async function fetchFeedingSchedule(tankId) {
+  return request(`/feeding/schedule/${tankId}`)
+}
+
+export async function setFeedingSchedule(tankId, feedingTime, detectionWindowMinutes = 15) {
+  return request('/feeding/schedule', {
+    method: 'POST',
+    body: JSON.stringify({
+      tank_id: tankId,
+      feeding_time: feedingTime,
+      detection_window_minutes: detectionWindowMinutes,
+    }),
+  })
+}
+
+export async function markAsFed(tankId, scheduledTime) {
+  return request('/feeding/mark', {
+    method: 'POST',
+    body: JSON.stringify({
+      tank_id: tankId,
+      scheduled_time: scheduledTime,
+    }),
+  })
+}
+
+export async function fetchFeedingRecords(tankId, limit = 7) {
+  return request(`/feeding/records/${tankId}?limit=${limit}`)
+}

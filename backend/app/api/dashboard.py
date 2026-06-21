@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from ..database import get_db
-from ..schemas.dashboard import DashboardSummary, TankStatus, PendingCommand
+from ..schemas.dashboard import DashboardSummary, TankStatus, PendingCommand, FeedingStatus
 from ..models import Device, ControlCommand, SensorData
 from ..services.compensation import CompensationService
+from ..services.feeding import FeedingService
 
 router = APIRouter()
 
@@ -90,11 +91,15 @@ def get_dashboard_summary(
         .count()
     )
 
+    feeding_status_dict = FeedingService.calculate_feeding_status(db, tank_id)
+    feeding_status = FeedingStatus(**feeding_status_dict)
+
     return DashboardSummary(
         tank_status=tank_status,
         pending_commands=pending_commands,
         recent_sensor_count=recent_sensor_count,
         today_command_count=today_command_count,
+        feeding_status=feeding_status,
     )
 
 

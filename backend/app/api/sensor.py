@@ -7,6 +7,7 @@ from ..database import get_db
 from ..schemas.sensor import SensorDataCreate, SensorDataResponse
 from ..models import SensorData, Device
 from ..services.compensation import CompensationService
+from ..services.feeding import FeedingService
 
 router = APIRouter()
 
@@ -20,6 +21,7 @@ def collect_sensor_data(
     接收鱼缸上传的传感器数据（每30秒一次）
     - 水温、pH值、溶氧量
     - 自动触发联合补偿逻辑
+    - 自动检测喂食活动
     """
     sensor_record = SensorData(
         tank_id=data.tank_id,
@@ -59,6 +61,14 @@ def collect_sensor_data(
         dissolved_oxygen=data.dissolved_oxygen,
     )
 
+    feeding_result = FeedingService.process_feeding_detection(
+        db=db,
+        tank_id=data.tank_id,
+        current_do=data.dissolved_oxygen,
+        current_temp=data.temperature,
+        current_ph=data.ph,
+    )
+
     db.commit()
     db.refresh(sensor_record)
 
@@ -66,7 +76,7 @@ def collect_sensor_data(
         data.temperature, data.ph, data.dissolved_oxygen
     )
 
-    return {
+    response = {
         "success": True,
         "sensor_id": sensor_record.id,
         "status": status,
@@ -81,6 +91,13 @@ def collect_sensor_data(
             for cmd in new_commands
         ],
     }
+
+    if feeding_result:
+        response["feeding"] = feeding_result
+        if feeding_result.get("detected"):
+            response["feeding_alert"] = "✓ 检测到喂食活动！"
+
+    return response
 
 
 @router.get("/history/{tank_id}", response_model=List[SensorDataResponse], summary="获取历史传感器数据")
