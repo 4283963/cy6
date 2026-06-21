@@ -43,6 +43,9 @@ def collect_sensor_data(
             current_ph=data.ph,
             current_do=data.dissolved_oxygen,
             last_heartbeat=datetime.utcnow(),
+            air_pump_running=False,
+            heater_running=False,
+            cooler_running=False,
         )
         db.add(device)
 

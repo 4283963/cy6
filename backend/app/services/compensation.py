@@ -302,8 +302,6 @@ class CompensationService:
                     db.add(cmd)
                     new_commands.append(cmd)
 
-        db.commit()
-        for cmd in new_commands:
-            db.refresh(cmd)
+        db.flush()
 
         return new_commands

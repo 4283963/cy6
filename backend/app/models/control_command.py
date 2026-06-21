@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, Index
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, Index, text
 from sqlalchemy.sql import func
 
 from ..database import Base
@@ -13,8 +13,20 @@ class ControlCommand(Base):
     action = Column(String(32), nullable=False, comment="动作: turn_on, turn_off 等")
     duration_minutes = Column(Integer, nullable=True, comment="持续时间(分钟)")
     reason = Column(Text, nullable=True, comment="触发原因")
-    triggered_by = Column(String(32), nullable=False, default="auto", comment="触发方式: auto/manual")
-    is_executed = Column(Boolean, default=False, nullable=False, index=True)
+    triggered_by = Column(
+        String(32),
+        nullable=False,
+        default="auto",
+        server_default=text("'auto'"),
+        comment="触发方式: auto/manual",
+    )
+    is_executed = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("FALSE"),
+        index=True,
+    )
     executed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True),
